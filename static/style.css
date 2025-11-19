@@ -1,0 +1,30 @@
+body {
+    font-family: Arial;
+    background: #f2f2f2;
+    text-align: center;
+    padding: 30px;
+}
+
+.form-box, .result-box {
+    background: white;
+    padding: 25px;
+    width: 400px;
+    margin: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 10px #ccc;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+}
+
+button, .back-btn {
+    background: #ff4d4d;
+    padding: 12px 18px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+}

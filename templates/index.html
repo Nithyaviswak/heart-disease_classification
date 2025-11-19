@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Heart Disease Predictor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<h1>❤️ Heart Disease Prediction</h1>
+
+<form action="/predict" method="POST" class="form-box">
+
+    <h2>Enter Patient Data</h2>
+
+    <label>Age</label>
+    <input type="number" name="age" required>
+
+    <label>Resting Blood Pressure</label>
+    <input type="number" name="resting_blood_pressure" required>
+
+    <label>Cholesterol</label>
+    <input type="number" name="cholestoral" required>
+
+    <label>Max Heart Rate</label>
+    <input type="number" name="Max_heart_rate" required>
+
+    <label>ST Depression (oldpeak)</label>
+    <input type="number" step="0.1" name="oldpeak" required>
+
+    <label>Sex</label>
+    <select name="sex">
+        <option>Male</option>
+        <option>Female</option>
+    </select>
+
+    <label>Chest Pain Type</label>
+    <select name="chest_pain_type">
+        <option>Typical angina</option>
+        <option>Atypical angina</option>
+        <option>Non-anginal pain</option>
+        <option>Asymptomatic</option>
+    </select>
+
+    <label>Fasting Blood Sugar &gt; 120</label>
+    <select name="fasting_blood_sugar">
+        <option>True</option>
+        <option>False</option>
+    </select>
+
+    <label>Rest ECG</label>
+    <select name="rest_ecg">
+        <option>Normal</option>
+        <option>ST-T wave abnormality</option>
+        <option>Left ventricular hypertrophy</option>
+    </select>
+
+    <label>Exercise Induced Angina</label>
+    <select name="exercise_induced_angina">
+        <option>Yes</option>
+        <option>No</option>
+    </select>
+
+    <label>Slope</label>
+    <select name="slope">
+        <option>Up</option>
+        <option>Flat</option>
+        <option>Down</option>
+    </select>
+
+    <label>Vessels Color</label>
+    <select name="vessels_colored_by_flourosopy">
+        <option>Zero</option>
+        <option>One</option>
+        <option>Two</option>
+        <option>Three</option>
+    </select>
+
+    <label>Thalassemia</label>
+    <select name="thalassemia">
+        <option>Normal</option>
+        <option>Fixed Defect</option>
+        <option>Reversable Defect</option>
+    </select>
+
+    <button type="submit">Predict</button>
+
+</form>
+
+</body>
+</html>

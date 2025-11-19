@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<h1>🔍 Prediction Result</h1>
+
+<div class="result-box">
+    <h2>{{ result }}</h2>
+    <p>Probability: <strong>{{ prob }}%</strong></p>
+</div>
+
+<h2>📊 Risk Visualization</h2>
+<canvas id="riskChart"></canvas>
+
+<script>
+    const ctx = document.getElementById("riskChart");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ["Age", "Cholesterol", "BP", "Max HR", "Oldpeak"],
+            datasets: [{
+                label: "Your Values",
+                data: [
+                    {{ data["age"] }},
+                    {{ data["cholestoral"] }},
+                    {{ data["resting_blood_pressure"] }},
+                    {{ data["Max_heart_rate"] }},
+                    {{ data["oldpeak"] }}
+                ]
+            }]
+        }
+    });
+</script>
+
+<a href="/" class="back-btn">⬅ Back</a>
+
+</body>
+</html>
