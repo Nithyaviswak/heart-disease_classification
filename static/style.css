@@ -1,30 +1,144 @@
 body {
-    font-family: Arial;
-    background: #f2f2f2;
-    text-align: center;
-    padding: 30px;
+    font-family: "Poppins", sans-serif;
+    background: #f1f7ff;
+    margin: 0;
 }
 
-.form-box, .result-box {
+/* Page Header */
+.header {
+    text-align: center;
+    padding: 30px 0;
+}
+
+/* Main Form Container */
+.container {
+    max-width: 1050px;
     background: white;
-    padding: 25px;
-    width: 400px;
     margin: auto;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+}
+
+/* GRID (2 per row always) */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.input-group label {
+    font-weight: 600;
+}
+
+/* ICON FIX: same width + perfect alignment */
+.input-icon {
+    display: flex;
+    align-items: center;
+    background: #eef5ff;
+    padding: 12px 15px;
     border-radius: 12px;
-    box-shadow: 0 0 10px #ccc;
+    border: 2px solid #d7e3ff;
+}
+
+.icon {
+    font-size: 22px;
+    width: 30px;
+    text-align: center;
+    margin-right: 10px;
 }
 
 input, select {
     width: 100%;
-    padding: 10px;
-    margin: 8px 0;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    outline: none;
 }
 
-button, .back-btn {
-    background: #ff4d4d;
-    padding: 12px 18px;
+/* Predict Button */
+.btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    background: #0066ff;
     color: white;
+    font-size: 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* Result Page Alignment */
+.result-box {
+    text-align: center;
+    margin-top: 50px;
+}
+
+/* Loader */
+.loader {
+    position: fixed;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #ccc;
+    border-top-color: #0066ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.loader p {
+    margin-top: 15px;
+    font-size: 18px;
+    color: #333;
+}
+/* CENTER RESULT PAGE */
+.result-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;   /* full screen */
+    background: #f1f7ff;
+}
+
+.result-card {
+    background: white;
+    padding: 40px 60px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.result-text {
+    font-size: 40px;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+/* Try Again button */
+.retry-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    background: #0066ff;
+    color: white;
     text-decoration: none;
+    border-radius: 12px;
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+.retry-btn:hover {
+    background: #004fcc;
 }

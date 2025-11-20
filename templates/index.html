@@ -1,91 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heart Disease Predictor</title>
+
     <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <script>
+        function showLoader() {
+            document.getElementById("loader").style.display = "flex";
+        }
+    </script>
 </head>
 
 <body>
 
-<h1>❤️ Heart Disease Prediction</h1>
+    <div class="header">
+        <h1>❤️ Heart Disease Prediction</h1>
+        <p>AI-powered medical risk analysis</p>
+    </div>
 
-<form action="/predict" method="POST" class="form-box">
+    <div class="container">
 
-    <h2>Enter Patient Data</h2>
+        <form action="/predict" method="POST" class="form" onsubmit="showLoader()">
 
-    <label>Age</label>
-    <input type="number" name="age" required>
+            <div class="grid">
 
-    <label>Resting Blood Pressure</label>
-    <input type="number" name="resting_blood_pressure" required>
+                <!-- AGE -->
+                <div class="input-group">
+                    <label>Age</label>
+                    <div class="input-icon">
+                        <span class="icon">👤</span>
+                        <input type="number" name="age" required placeholder="Enter Age">
+                    </div>
+                </div>
 
-    <label>Cholesterol</label>
-    <input type="number" name="cholestoral" required>
+                <!-- SEX -->
+                <div class="input-group">
+                    <label>Sex</label>
+                    <div class="input-icon">
+                        <span class="icon">⚧️</span>
+                        <select name="sex" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>Max Heart Rate</label>
-    <input type="number" name="Max_heart_rate" required>
+                <!-- CHEST PAIN -->
+                <div class="input-group">
+                    <label>Chest Pain Type</label>
+                    <div class="input-icon">
+                        <span class="icon">❤️‍🔥</span>
+                        <select name="chest_pain_type">
+                            <option>Typical angina</option>
+                            <option>Atypical angina</option>
+                            <option>Non-anginal pain</option>
+                            <option>Asymptomatic</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>ST Depression (oldpeak)</label>
-    <input type="number" step="0.1" name="oldpeak" required>
+                <!-- BLOOD PRESSURE -->
+                <div class="input-group">
+                    <label>Resting Blood Pressure</label>
+                    <div class="input-icon">
+                        <span class="icon">🩺</span>
+                        <input type="number" name="resting_blood_pressure" placeholder="mmHg">
+                    </div>
+                </div>
 
-    <label>Sex</label>
-    <select name="sex">
-        <option>Male</option>
-        <option>Female</option>
-    </select>
+                <!-- CHOLESTEROL -->
+                <div class="input-group">
+                    <label>Cholesterol</label>
+                    <div class="input-icon">
+                        <span class="icon">🩸</span>
+                        <input type="number" name="cholestoral" placeholder="mg/dl">
+                    </div>
+                </div>
 
-    <label>Chest Pain Type</label>
-    <select name="chest_pain_type">
-        <option>Typical angina</option>
-        <option>Atypical angina</option>
-        <option>Non-anginal pain</option>
-        <option>Asymptomatic</option>
-    </select>
+                <!-- FASTING BLOOD SUGAR -->
+                <div class="input-group">
+                    <label>Fasting Blood Sugar</label>
+                    <div class="input-icon">
+                        <span class="icon">🍬</span>
+                        <select name="fasting_blood_sugar">
+                            <option>Lower than 120 mg/ml</option>
+                            <option>Greater than 120 mg/ml</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>Fasting Blood Sugar &gt; 120</label>
-    <select name="fasting_blood_sugar">
-        <option>True</option>
-        <option>False</option>
-    </select>
+                <!-- REST ECG -->
+                <div class="input-group">
+                    <label>Rest ECG</label>
+                    <div class="input-icon">
+                        <span class="icon">📊</span>
+                        <select name="rest_ecg">
+                            <option>Normal</option>
+                            <option>ST-T wave abnormality</option>
+                            <option>Left ventricular hypertrophy</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>Rest ECG</label>
-    <select name="rest_ecg">
-        <option>Normal</option>
-        <option>ST-T wave abnormality</option>
-        <option>Left ventricular hypertrophy</option>
-    </select>
+                <!-- MAX HEART RATE -->
+                <div class="input-group">
+                    <label>Max Heart Rate</label>
+                    <div class="input-icon">
+                        <span class="icon">⚡</span>
+                        <input type="number" name="Max_heart_rate" placeholder="Enter value">
+                    </div>
+                </div>
 
-    <label>Exercise Induced Angina</label>
-    <select name="exercise_induced_angina">
-        <option>Yes</option>
-        <option>No</option>
-    </select>
+                <!-- EXERCISE ANGINA -->
+                <div class="input-group">
+                    <label>Exercise Induced Angina</label>
+                    <div class="input-icon">
+                        <span class="icon">🏃</span>
+                        <select name="exercise_induced_angina">
+                            <option>No</option>
+                            <option>Yes</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>Slope</label>
-    <select name="slope">
-        <option>Up</option>
-        <option>Flat</option>
-        <option>Down</option>
-    </select>
+                <!-- OLDPEAK -->
+                <div class="input-group">
+                    <label>Oldpeak</label>
+                    <div class="input-icon">
+                        <span class="icon">📉</span>
+                        <input type="number" step="0.1" name="oldpeak" placeholder="ST depression">
+                    </div>
+                </div>
 
-    <label>Vessels Color</label>
-    <select name="vessels_colored_by_flourosopy">
-        <option>Zero</option>
-        <option>One</option>
-        <option>Two</option>
-        <option>Three</option>
-    </select>
+                <!-- SLOPE -->
+                <div class="input-group">
+                    <label>Slope</label>
+                    <div class="input-icon">
+                        <span class="icon">📈</span>
+                        <select name="slope">
+                            <option>Upsloping</option>
+                            <option>Flat</option>
+                            <option>Downsloping</option>
+                        </select>
+                    </div>
+                </div>
 
-    <label>Thalassemia</label>
-    <select name="thalassemia">
-        <option>Normal</option>
-        <option>Fixed Defect</option>
-        <option>Reversable Defect</option>
-    </select>
+                <!-- VESSELS -->
+                <div class="input-group">
+                    <label>Vessels Colored by Fluoroscopy</label>
+                    <div class="input-icon">
+                        <span class="icon">🧬</span>
+                        <select name="vessels_colored_by_flourosopy">
+                            <option>Zero</option>
+                            <option>One</option>
+                            <option>Two</option>
+                            <option>Three</option>
+                        </select>
+                    </div>
+                </div>
 
-    <button type="submit">Predict</button>
+                <!-- THAL -->
+                <div class="input-group">
+                    <label>Thalassemia</label>
+                    <div class="input-icon">
+                        <span class="icon">🧪</span>
+                        <select name="thalassemia">
+                            <option>Normal</option>
+                            <option>Fixed Defect</option>
+                            <option>Reversable Defect</option>
+                        </select>
+                    </div>
+                </div>
 
-</form>
+            </div>
+
+            <button class="btn ripple">Predict Risk</button>
+
+        </form>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p>Analyzing your health data...</p>
+    </div>
 
 </body>
 </html>

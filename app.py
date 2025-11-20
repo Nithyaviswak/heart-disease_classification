@@ -1,52 +1,105 @@
 from flask import Flask, render_template, request
+import pickle
 import pandas as pd
-import joblib
-
-model = joblib.load("model.pkl")
-encoders = joblib.load("encoders.pkl")
-scaler = joblib.load("scaler.pkl")
 
 app = Flask(__name__)
 
-categorical_cols = [
-    'sex', 'chest_pain_type', 'fasting_blood_sugar', 'rest_ecg',
-    'exercise_induced_angina', 'slope', 'thalassemia',
-    'vessels_colored_by_flourosopy'
-]
+# Load model files
+model = pickle.load(open("model.pkl", "rb"))
+scaler = pickle.load(open("scaler.pkl", "rb"))
+encoders = pickle.load(open("encoders.pkl", "rb"))
 
-numeric_cols = [
-    'age', 'resting_blood_pressure', 'cholestoral',
-    'Max_heart_rate', 'oldpeak'
+# Identify categorical & numerical columns
+cat_cols = list(encoders.keys())
+num_cols = list(scaler.feature_names_in_)
+
+# Categorical mapping (backup)
+label_mapping = {
+    "sex": {"Male": 1, "Female": 0},
+
+    "chest_pain_type": {
+        "Typical angina": 0,
+        "Atypical angina": 1,
+        "Non-anginal pain": 2,
+        "Asymptomatic": 3
+    },
+
+    "fasting_blood_sugar": {
+        "Lower than 120 mg/ml": 0,
+        "Greater than 120 mg/ml": 1
+    },
+
+    "rest_ecg": {
+        "Normal": 0,
+        "ST-T wave abnormality": 1,
+        "Left ventricular hypertrophy": 2
+    },
+
+    "exercise_induced_angina": {"No": 0, "Yes": 1},
+
+    "slope": {"Upsloping": 0, "Flat": 1, "Downsloping": 2},
+
+    "vessels_colored_by_flourosopy": {
+        "Zero": 0, "One": 1, "Two": 2, "Three": 3
+    },
+
+    "thalassemia": {
+        "Normal": 1,
+        "Fixed Defect": 2,
+        "Reversable Defect": 3
+    }
+}
+
+# Column order
+columns = [
+    "age", "sex", "chest_pain_type", "resting_blood_pressure",
+    "cholestoral", "fasting_blood_sugar", "rest_ecg", "Max_heart_rate",
+    "exercise_induced_angina", "oldpeak", "slope",
+    "vessels_colored_by_flourosopy", "thalassemia"
 ]
 
 @app.route("/")
-def index():
-    return render_template("index.html")
+def home():
+    return render_template("index.html", columns=columns)
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    try:
+        data = {
+            "age": int(request.form["age"]),
+            "sex": request.form["sex"],
+            "chest_pain_type": request.form["chest_pain_type"],
+            "resting_blood_pressure": int(request.form["resting_blood_pressure"]),
+            "cholestoral": int(request.form["cholestoral"]),
+            "fasting_blood_sugar": request.form["fasting_blood_sugar"],
+            "rest_ecg": request.form["rest_ecg"],
+            "Max_heart_rate": int(request.form["Max_heart_rate"]),
+            "exercise_induced_angina": request.form["exercise_induced_angina"],
+            "oldpeak": float(request.form["oldpeak"]),
+            "slope": request.form["slope"],
+            "vessels_colored_by_flourosopy": request.form["vessels_colored_by_flourosopy"],
+            "thalassemia": request.form["thalassemia"]
+        }
 
-    data = {col: request.form[col] for col in numeric_cols + categorical_cols}
+        df = pd.DataFrame([data])
 
-    # Convert numeric values
-    for col in numeric_cols:
-        data[col] = float(data[col])
+        # Apply encoders
+        for col in cat_cols:
+            df[col] = encoders[col].transform(df[col])
 
-    df = pd.DataFrame([data])
+        # Scale numeric columns
+        df[num_cols] = scaler.transform(df[num_cols])
 
-    # Encode categorical
-    for c in categorical_cols:
-        df[c] = encoders[c].transform(df[c])
+        # Predict
+        prediction = model.predict(df)[0]
 
-    # Scale numeric
-    df[numeric_cols] = scaler.transform(df[numeric_cols])
+        result_label = "Low Risk 🙂" if prediction == 0 else "High Risk ⚠️"
 
-    pred = model.predict(df)[0]
-    prob = model.predict_proba(df)[0][1]
+        return render_template("result.html", prediction=result_label)
 
-    result = "Likely to have heart disease" if pred == 1 else "Unlikely to have heart disease"
-
-    return render_template("result.html", result=result, prob=round(prob * 100, 2), data=data)
+    except Exception as e:
+        return render_template("result.html", prediction=f"Error: {str(e)}")
 
 
 if __name__ == "__main__":
