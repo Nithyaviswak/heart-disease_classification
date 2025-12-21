@@ -3,191 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart Disease Predictor</title>
-
-    <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
-    <script>
-        function showLoader() {
-            document.getElementById("loader").style.display = "flex";
+    <title>Heart Health Intelligence | R NITHYANANDACHARI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #1e293b;
         }
-    </script>
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .input-group {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .input-field { 
+            padding: 12px 12px 12px 45px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            width: 100%;
+            transition: all 0.3s; 
+            background: #fff;
+            font-size: 0.95rem;
+        }
+
+        .input-field:focus { 
+            border-color: #3b82f6; 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); 
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .input-group:focus-within .input-icon {
+            color: #3b82f6;
+        }
+
+        .btn-predict {
+            background: #1e293b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-predict:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-animate {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
+<body class="min-h-screen flex flex-col">
 
-<body>
-
-    <div class="header">
-        <h1>❤️ Heart Disease Prediction</h1>
-        <p>AI-powered medical risk analysis</p>
-    </div>
-
-    <div class="container">
-
-        <form action="/predict" method="POST" class="form" onsubmit="showLoader()">
-
-            <div class="grid">
-
-                <!-- AGE -->
-                <div class="input-group">
-                    <label>Age</label>
-                    <div class="input-icon">
-                        <span class="icon">👤</span>
-                        <input type="number" name="age" required placeholder="Enter Age">
-                    </div>
+    <main class="flex-grow p-4 md:p-12 flex justify-center items-start">
+        <div class="max-w-6xl w-full glass-card shadow-2xl rounded-3xl overflow-hidden mt-6">
+            <!-- Header Section -->
+            <div class="bg-slate-900 p-10 text-white text-center">
+                <h1 class="text-3xl font-extrabold tracking-tight">
+                    Heart Health Intelligence
+                </h1>
+                <p class="text-slate-400 mt-2 font-medium">Advanced Predictive Diagnostic Analysis Portal</p>
+                <div class="mt-4 flex justify-center gap-3">
+                    <span class="px-3 py-1 bg-slate-800 text-blue-400 text-[10px] font-black rounded-full border border-slate-700 uppercase tracking-widest">ML Simulation</span>
+                    <span class="px-3 py-1 bg-slate-800 text-slate-400 text-[10px] font-black rounded-full border border-slate-700 uppercase tracking-widest">v3.0 Stable</span>
                 </div>
+            </div>
 
-                <!-- SEX -->
-                <div class="input-group">
-                    <label>Sex</label>
-                    <div class="input-icon">
-                        <span class="icon">⚧️</span>
-                        <select name="sex" required>
+            <div class="p-8 md:p-12">
+                <form id="predictionForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" onsubmit="event.preventDefault(); predictRisk();">
+                    
+                    <!-- Age -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Patient Age</label>
+                        <i class="fa-solid fa-calendar-day input-icon"></i>
+                        <input type="number" id="age" required class="input-field" placeholder="Years">
+                    </div>
+
+                    <!-- Blood Pressure -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Resting B.P.</label>
+                        <i class="fa-solid fa-gauge-high input-icon"></i>
+                        <input type="number" id="rbp" required class="input-field" placeholder="mm Hg">
+                    </div>
+
+                    <!-- Cholesterol -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Cholesterol</label>
+                        <i class="fa-solid fa-flask-vial input-icon"></i>
+                        <input type="number" id="chol" required class="input-field" placeholder="mg/dl">
+                    </div>
+
+                    <!-- Max Heart Rate -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Max Heart Rate</label>
+                        <i class="fa-solid fa-heart-circle-bolt input-icon"></i>
+                        <input type="number" id="mhr" required class="input-field" placeholder="bpm">
+                    </div>
+
+                    <!-- Oldpeak -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">ST Depression</label>
+                        <i class="fa-solid fa-chart-line input-icon"></i>
+                        <input type="number" step="0.1" id="oldpeak" required class="input-field" placeholder="0.0 - 6.0">
+                    </div>
+
+                    <!-- Sex -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Sex</label>
+                        <i class="fa-solid fa-venus-mars input-icon"></i>
+                        <select id="sex" class="input-field appearance-none">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- CHEST PAIN -->
-                <div class="input-group">
-                    <label>Chest Pain Type</label>
-                    <div class="input-icon">
-                        <span class="icon">❤️‍🔥</span>
-                        <select name="chest_pain_type">
-                            <option>Typical angina</option>
-                            <option>Atypical angina</option>
-                            <option>Non-anginal pain</option>
-                            <option>Asymptomatic</option>
+                    <!-- Chest Pain -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Chest Pain Type</label>
+                        <i class="fa-solid fa-stethoscope input-icon"></i>
+                        <select id="cp" class="input-field appearance-none">
+                            <option value="Typical">Typical Angina</option>
+                            <option value="Atypical">Atypical Angina</option>
+                            <option value="Non-anginal">Non-anginal</option>
+                            <option value="Asymptomatic">Asymptomatic</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- BLOOD PRESSURE -->
-                <div class="input-group">
-                    <label>Resting Blood Pressure</label>
-                    <div class="input-icon">
-                        <span class="icon">🩺</span>
-                        <input type="number" name="resting_blood_pressure" placeholder="mmHg">
-                    </div>
-                </div>
-
-                <!-- CHOLESTEROL -->
-                <div class="input-group">
-                    <label>Cholesterol</label>
-                    <div class="input-icon">
-                        <span class="icon">🩸</span>
-                        <input type="number" name="cholestoral" placeholder="mg/dl">
-                    </div>
-                </div>
-
-                <!-- FASTING BLOOD SUGAR -->
-                <div class="input-group">
-                    <label>Fasting Blood Sugar</label>
-                    <div class="input-icon">
-                        <span class="icon">🍬</span>
-                        <select name="fasting_blood_sugar">
-                            <option>Lower than 120 mg/ml</option>
-                            <option>Greater than 120 mg/ml</option>
+                    <!-- Fasting Sugar -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Fasting Sugar</label>
+                        <i class="fa-solid fa-droplet input-icon"></i>
+                        <select id="fbs" class="input-field appearance-none">
+                            <option value="No">Under 120 mg/dl</option>
+                            <option value="Yes">Over 120 mg/dl</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- REST ECG -->
-                <div class="input-group">
-                    <label>Rest ECG</label>
-                    <div class="input-icon">
-                        <span class="icon">📊</span>
-                        <select name="rest_ecg">
-                            <option>Normal</option>
-                            <option>ST-T wave abnormality</option>
-                            <option>Left ventricular hypertrophy</option>
+                    <!-- Thalassemia -->
+                    <div class="input-group">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Thalassemia</label>
+                        <i class="fa-solid fa-dna input-icon"></i>
+                        <select id="thal" class="input-field appearance-none">
+                            <option value="Normal">Normal</option>
+                            <option value="Fixed Defect">Fixed Defect</option>
+                            <option value="Reversable Defect">Reversable Defect</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- MAX HEART RATE -->
-                <div class="input-group">
-                    <label>Max Heart Rate</label>
-                    <div class="input-icon">
-                        <span class="icon">⚡</span>
-                        <input type="number" name="Max_heart_rate" placeholder="Enter value">
+                    <button type="submit" class="col-span-full btn-predict text-white font-bold py-4 rounded-xl shadow-lg mt-4 uppercase tracking-[0.2em] text-xs">
+                        Perform Analysis
+                    </button>
+                </form>
+
+                <!-- Result Section -->
+                <div id="resultSection" class="mt-16 pt-10 border-t border-slate-100 hidden result-animate">
+                    <div class="grid md:grid-cols-2 gap-8 items-stretch">
+                        
+                        <!-- Prediction Summary Card -->
+                        <div id="statusCard" class="p-8 rounded-3xl border-2 flex flex-col justify-center">
+                            <p id="riskLabel" class="text-[10px] font-black uppercase tracking-widest mb-1"></p>
+                            <h2 id="resultText" class="text-4xl font-black"></h2>
+                            
+                            <div class="mt-8">
+                                <div class="flex justify-between items-center text-xs font-bold mb-2">
+                                    <span class="text-slate-500 uppercase">Analysis Confidence</span>
+                                    <span id="scoreText" class="text-slate-900"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                    <div id="scoreBar" class="h-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations Card -->
+                        <div class="bg-slate-900 text-white p-8 rounded-3xl shadow-xl">
+                            <h3 id="adviceTitle" class="text-lg font-bold flex items-center gap-2 mb-6 text-blue-400"></h3>
+                            <ul id="adviceList" class="space-y-4"></ul>
+                        </div>
+
                     </div>
                 </div>
-
-                <!-- EXERCISE ANGINA -->
-                <div class="input-group">
-                    <label>Exercise Induced Angina</label>
-                    <div class="input-icon">
-                        <span class="icon">🏃</span>
-                        <select name="exercise_induced_angina">
-                            <option>No</option>
-                            <option>Yes</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- OLDPEAK -->
-                <div class="input-group">
-                    <label>Oldpeak</label>
-                    <div class="input-icon">
-                        <span class="icon">📉</span>
-                        <input type="number" step="0.1" name="oldpeak" placeholder="ST depression">
-                    </div>
-                </div>
-
-                <!-- SLOPE -->
-                <div class="input-group">
-                    <label>Slope</label>
-                    <div class="input-icon">
-                        <span class="icon">📈</span>
-                        <select name="slope">
-                            <option>Upsloping</option>
-                            <option>Flat</option>
-                            <option>Downsloping</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- VESSELS -->
-                <div class="input-group">
-                    <label>Vessels Colored by Fluoroscopy</label>
-                    <div class="input-icon">
-                        <span class="icon">🧬</span>
-                        <select name="vessels_colored_by_flourosopy">
-                            <option>Zero</option>
-                            <option>One</option>
-                            <option>Two</option>
-                            <option>Three</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- THAL -->
-                <div class="input-group">
-                    <label>Thalassemia</label>
-                    <div class="input-icon">
-                        <span class="icon">🧪</span>
-                        <select name="thalassemia">
-                            <option>Normal</option>
-                            <option>Fixed Defect</option>
-                            <option>Reversable Defect</option>
-                        </select>
-                    </div>
-                </div>
-
             </div>
+        </div>
+    </main>
 
-            <button class="btn ripple">Predict Risk</button>
+    <!-- Professional Footer -->
+    <footer class="bg-white border-t border-slate-200 py-12 px-8 mt-10">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Developed & Engineered By</p>
+                <h4 class="text-slate-900 font-extrabold text-2xl tracking-tighter">R NITHYANANDACHARI</h4>
+                <p class="text-blue-600 text-[10px] font-bold mt-1 uppercase tracking-widest">Machine Learning Engineer</p>
+            </div>
+            
+            <div class="flex flex-col items-center md:items-end gap-5">
+                <div class="flex items-center gap-8">
+                    <a href="https://github.com/Nithyaviswak" class="text-slate-400 hover:text-slate-900 transition-all transform hover:scale-110 text-2xl">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/nithyananda1311" class="text-slate-400 hover:text-blue-600 transition-all transform hover:scale-110 text-2xl">
+                        <i class="fa-brands fa-linkedin"></i>
+                    </a>
+                </div>
+                <div class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    © 2024 HEART INTELLIGENCE HUB
+                </div>
+            </div>
+        </div>
+    </footer>
 
-        </form>
-    </div>
+    <script>
+        // --- SIMULATED ML WEIGHTS ---
+        const WEIGHTS = {
+            'thal_Reversable Defect': 3.5,
+            'cp_Asymptomatic': 3.0,
+            'oldpeak_high': 2.2,
+            'mhr_low': 1.8,
+            'sex_Male': 1.0,
+            'fbs_Yes': 0.5
+        };
 
-    <!-- Loader -->
-    <div class="loader" id="loader">
-        <div class="spinner"></div>
-        <p>Analyzing your health data...</p>
-    </div>
+        const THRESHOLD = 5.5;
 
+        function predictRisk() {
+            const age = parseFloat(document.getElementById('age').value);
+            const mhr = parseFloat(document.getElementById('mhr').value);
+            const oldpeak = parseFloat(document.getElementById('oldpeak').value);
+            const sex = document.getElementById('sex').value;
+            const cp = document.getElementById('cp').value;
+            const thal = document.getElementById('thal').value;
+            const fbs = document.getElementById('fbs').value;
+
+            let score = 0;
+
+            // Logic Calculation
+            if (thal === 'Reversable Defect') score += WEIGHTS['thal_Reversable Defect'];
+            if (cp === 'Asymptomatic') score += WEIGHTS['cp_Asymptomatic'];
+            if (oldpeak > 1.5) score += WEIGHTS['oldpeak_high'];
+            if (mhr < 130) score += WEIGHTS['mhr_low'];
+            if (sex === 'Male') score += WEIGHTS['sex_Male'];
+            if (fbs === 'Yes') score += WEIGHTS['fbs_Yes'];
+
+            // Cap score at 10 for UI
+            const finalScore = Math.min(score, 10);
+            displayResult(finalScore >= THRESHOLD, finalScore);
+        }
+
+        function displayResult(isHighRisk, score) {
+            const section = document.getElementById('resultSection');
+            const resultText = document.getElementById('resultText');
+            const riskLabel = document.getElementById('riskLabel');
+            const statusCard = document.getElementById('statusCard');
+            const scoreBar = document.getElementById('scoreBar');
+            const scoreText = document.getElementById('scoreText');
+            const adviceTitle = document.getElementById('adviceTitle');
+            const adviceList = document.getElementById('adviceList');
+
+            section.classList.remove('hidden');
+            
+            if (isHighRisk) {
+                resultText.innerText = "HIGH RISK ⚠️";
+                riskLabel.innerText = "Diagnosis Summary";
+                resultText.className = "text-4xl font-black mt-2 text-rose-700";
+                riskLabel.className = "text-[10px] font-black uppercase tracking-widest mb-1 text-rose-500";
+                statusCard.className = "p-8 rounded-3xl border-2 flex flex-col justify-center border-rose-500 bg-rose-50";
+                scoreBar.className = "h-full transition-all duration-1000 bg-rose-500";
+                
+                adviceTitle.innerHTML = '<i class="fa-solid fa-user-doctor"></i> Immediate Actions Required';
+                renderAdvice([
+                    "Consult a cardiologist for a comprehensive clinical assessment.",
+                    "Monitor for symptoms like chest discomfort or shortness of breath.",
+                    "Adopt a low-sodium, heart-healthy nutrition plan.",
+                    "Limit strenuous physical activity until cleared by a physician.",
+                    "Maintain a digital log of daily blood pressure readings."
+                ]);
+            } else {
+                resultText.innerText = "LOW RISK ✅";
+                riskLabel.innerText = "Diagnosis Summary";
+                resultText.className = "text-4xl font-black mt-2 text-emerald-700";
+                riskLabel.className = "text-[10px] font-black uppercase tracking-widest mb-1 text-emerald-500";
+                statusCard.className = "p-8 rounded-3xl border-2 flex flex-col justify-center border-emerald-500 bg-emerald-50";
+                scoreBar.className = "h-full transition-all duration-1000 bg-emerald-500";
+                
+                adviceTitle.innerHTML = '<i class="fa-solid fa-shield-heart"></i> Preventive Maintenance';
+                renderAdvice([
+                    "Continue regular cardio exercise (150+ mins/week).",
+                    "Schedule an annual cardiac screening to monitor trends.",
+                    "Maintain a balanced diet rich in fibers and omega-3s.",
+                    "Ensure consistent 7-9 hours of restorative sleep.",
+                    "Practice mindfulness or meditation to manage daily stress."
+                ]);
+            }
+
+            scoreText.innerText = (score * 10).toFixed(0) + "% Intensity";
+            setTimeout(() => {
+                scoreBar.style.width = (score * 10) + "%";
+            }, 100);
+
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderAdvice(items) {
+            const list = document.getElementById('adviceList');
+            list.innerHTML = "";
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "flex items-start gap-3 text-sm text-slate-300";
+                li.innerHTML = `<i class="fa-solid fa-circle-check text-blue-500 mt-1"></i> ${item}`;
+                list.appendChild(li);
+            });
+        }
+    </script>
 </body>
 </html>
