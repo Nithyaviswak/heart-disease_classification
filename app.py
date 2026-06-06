@@ -1,112 +1,224 @@
-import pandas as pd
+"""
+app.py - FastAPI Backend with ONNX Runtime Inference
+=====================================================
+Heart Disease Risk Prediction API using an XGBoost model exported to ONNX.
+"""
+
+import json
+import pickle
+import os
+
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from flask import Flask, render_template, request, jsonify
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
-# --- 1. MODEL INITIALIZATION AND TRAINING ---
+import onnxruntime as ort
 
-try:
-    data = pd.read_csv("data.csv")
-except FileNotFoundError:
-    print("FATAL ERROR: data.csv not found.")
-    exit()
+# ---------------------------------------------------------------------------
+# 1. APPLICATION SETUP
+# ---------------------------------------------------------------------------
+app = FastAPI(
+    title="Heart Disease Risk Prediction",
+    description="Clinical-grade ML inference via ONNX Runtime",
+    version="4.0.0",
+)
 
-categorical_cols = ['sex', 'chest_pain_type', 'fasting_blood_sugar', 'rest_ecg', 'exercise_induced_angina', 'slope', 'vessels_colored_by_flourosopy', 'thalassemia']
-numeric_cols = ['age', 'resting_blood_pressure', 'cholestoral', 'Max_heart_rate', 'oldpeak']
+templates = Jinja2Templates(directory="templates")
 
-df = pd.get_dummies(data, columns=categorical_cols, drop_first=True)
-X = df.drop("target", axis=1)
-y = df["target"]
+# ---------------------------------------------------------------------------
+# 2. LOAD MODEL ARTIFACTS
+# ---------------------------------------------------------------------------
+MODEL_DIR = "models"
 
-scaler = StandardScaler()
-X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+# ONNX Inference Session (loaded once at startup)
+onnx_session = ort.InferenceSession(
+    os.path.join(MODEL_DIR, "heart_disease_model.onnx"),
+    providers=["CPUExecutionProvider"],
+)
+INPUT_NAME = onnx_session.get_inputs()[0].name
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
-MODEL_FEATURES = X.columns.tolist()
+# Scaler for numeric features
+with open(os.path.join(MODEL_DIR, "scaler.pkl"), "rb") as f:
+    scaler = pickle.load(f)
 
-# --- 2. ADVICE LOGIC ---
+# Label encoders for categorical features
+with open(os.path.join(MODEL_DIR, "encoders.pkl"), "rb") as f:
+    encoders = pickle.load(f)
 
-def get_health_advice(prediction):
+# Feature configuration
+with open(os.path.join(MODEL_DIR, "feature_config.json"), "r") as f:
+    feature_config = json.load(f)
+
+FEATURE_ORDER = feature_config["feature_order"]
+CATEGORICAL_COLS = feature_config["categorical_cols"]
+NUMERIC_COLS = feature_config["numeric_cols"]
+ENCODING_MAPS = feature_config["encoding_maps"]
+
+print(f"[OK] ONNX session loaded  | Features: {len(FEATURE_ORDER)}")
+print(f"[OK] Input tensor name: {INPUT_NAME}")
+
+# ---------------------------------------------------------------------------
+# 3. PYDANTIC REQUEST SCHEMA
+# ---------------------------------------------------------------------------
+class PatientInput(BaseModel):
+    """Schema for the 13 clinical attributes sent from the frontend."""
+    age: float = Field(..., ge=1, le=120, description="Patient age in years")
+    sex: str = Field(..., description="Male or Female")
+    chest_pain_type: str = Field(..., description="Chest pain category")
+    resting_blood_pressure: float = Field(..., ge=50, le=300, description="Resting BP in mm Hg")
+    cholestoral: float = Field(..., ge=50, le=600, description="Serum cholesterol in mg/dl")
+    fasting_blood_sugar: str = Field(..., description="Fasting blood sugar level category")
+    rest_ecg: str = Field(..., description="Resting ECG result")
+    Max_heart_rate: float = Field(..., ge=50, le=250, description="Maximum heart rate achieved")
+    exercise_induced_angina: str = Field(..., description="Exercise induced angina (Yes/No)")
+    oldpeak: float = Field(..., ge=0, le=10, description="ST depression induced by exercise")
+    slope: str = Field(..., description="Slope of peak exercise ST segment")
+    vessels_colored_by_flourosopy: str = Field(..., description="Number of major vessels (0-4)")
+    thalassemia: str = Field(..., description="Thalassemia type")
+
+# ---------------------------------------------------------------------------
+# 4. HEALTH ADVICE LOGIC
+# ---------------------------------------------------------------------------
+def get_health_advice(prediction: int, probability: float) -> dict:
+    """Return structured advice based on the prediction."""
     if prediction == 1:
+        if probability >= 0.8:
+            risk_level = "Critical"
+            badge_class = "critical"
+        elif probability >= 0.6:
+            risk_level = "High"
+            badge_class = "high"
+        else:
+            risk_level = "Moderate"
+            badge_class = "moderate"
         return {
+            "risk_level": risk_level,
+            "badge_class": badge_class,
             "title": "Immediate Actions Required",
-            "class": "text-red-700 bg-red-50 border-red-200",
             "items": [
                 "Consult a cardiologist as soon as possible for a comprehensive evaluation.",
                 "Follow any prescribed medication strictly and do not skip doses.",
-                "Adopt a 'Heart-Healthy' diet: Reduce sodium, saturated fats, and processed sugars.",
+                "Adopt a heart-healthy diet: reduce sodium, saturated fats, and processed sugars.",
                 "Avoid strenuous physical activity until cleared by a medical professional.",
-                "Monitor for symptoms like chest discomfort, unusual fatigue, or shortness of breath."
-            ]
+                "Monitor for symptoms like chest discomfort, unusual fatigue, or shortness of breath.",
+            ],
         }
     else:
+        risk_level = "Low"
+        badge_class = "low"
         return {
+            "risk_level": risk_level,
+            "badge_class": badge_class,
             "title": "Maintenance & Prevention Tips",
-            "class": "text-green-700 bg-green-50 border-green-200",
             "items": [
                 "Maintain a regular exercise routine (at least 150 minutes of moderate activity per week).",
                 "Keep a balanced diet rich in whole grains, lean proteins, and plenty of vegetables.",
                 "Schedule annual check-ups to monitor blood pressure and cholesterol levels.",
                 "Practice stress-management techniques like meditation or deep breathing exercises.",
-                "Stay hydrated and ensure you get 7-9 hours of quality sleep daily."
-            ]
+                "Stay hydrated and ensure you get 7-9 hours of quality sleep daily.",
+            ],
         }
 
-# --- 3. FLASK SETUP ---
+# ---------------------------------------------------------------------------
+# 5. ROUTES
+# ---------------------------------------------------------------------------
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    """Serve the main dashboard page."""
+    return templates.TemplateResponse("index.html", {"request": request})
 
-app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.post("/predict")
+async def predict(patient: PatientInput):
+    """
+    Accept patient clinical metrics, preprocess them, run ONNX inference,
+    and return the risk prediction with probability scores.
+    """
     try:
-        form_data = request.form
-        input_data = {
-            "age": float(form_data["age"]),
-            "resting_blood_pressure": float(form_data["resting_blood_pressure"]),
-            "cholestoral": float(form_data["cholestoral"]),
-            "Max_heart_rate": float(form_data["Max_heart_rate"]),
-            "oldpeak": float(form_data["oldpeak"]),
+        # Build the raw feature dict in the correct order
+        raw = patient.model_dump()
+
+        # --- Encode categoricals ---
+        encoded = {}
+        for col in FEATURE_ORDER:
+            if col in CATEGORICAL_COLS:
+                label = raw[col]
+                # Use the encoding map from feature_config
+                if label in ENCODING_MAPS[col]:
+                    encoded[col] = float(ENCODING_MAPS[col][label])
+                else:
+                    # Fallback: try label encoder directly
+                    encoded[col] = float(encoders[col].transform([label])[0])
+            else:
+                encoded[col] = float(raw[col])
+
+        # --- Scale numerics ---
+        numeric_values = np.array([[encoded[c] for c in NUMERIC_COLS]])
+        scaled_values = scaler.transform(numeric_values)[0]
+        for i, col in enumerate(NUMERIC_COLS):
+            encoded[col] = float(scaled_values[i])
+
+        # --- Assemble feature vector in correct order ---
+        feature_vector = np.array(
+            [[encoded[col] for col in FEATURE_ORDER]], dtype=np.float32
+        )
+
+        # --- ONNX Inference ---
+        onnx_result = onnx_session.run(None, {INPUT_NAME: feature_vector})
+        prediction = int(onnx_result[0][0])
+
+        # Probability scores from ONNX (ZipMap output)
+        prob_output = onnx_result[1]
+        if isinstance(prob_output, list):
+            # ZipMap returns list of dicts
+            prob_dict = prob_output[0]
+            prob_no_risk = float(prob_dict.get(0, prob_dict.get("0", 0.0)))
+            prob_risk = float(prob_dict.get(1, prob_dict.get("1", 0.0)))
+        elif isinstance(prob_output, np.ndarray):
+            prob_no_risk = float(prob_output[0][0])
+            prob_risk = float(prob_output[0][1])
+        else:
+            prob_no_risk = 0.0
+            prob_risk = 0.0
+
+        # Build response
+        advice = get_health_advice(prediction, prob_risk)
+
+        return {
+            "status": "success",
+            "prediction": prediction,
+            "risk_level": advice["risk_level"],
+            "badge_class": advice["badge_class"],
+            "probability": {
+                "no_risk": round(prob_no_risk * 100, 1),
+                "risk": round(prob_risk * 100, 1),
+            },
+            "advice": {
+                "title": advice["title"],
+                "items": advice["items"],
+            },
         }
-
-        user_df_dict = {feature: 0 for feature in MODEL_FEATURES}
-        for col in numeric_cols: user_df_dict[col] = input_data[col]
-
-        # One-Hot Encoding mappings
-        if form_data["sex"] == "Male": user_df_dict["sex_Male"] = 1
-        if form_data["chest_pain_type"] != "Typical": user_df_dict[f"chest_pain_type_{form_data['chest_pain_type']}"] = 1
-        if form_data["fasting_blood_sugar"] == "Yes": user_df_dict["fasting_blood_sugar_Yes"] = 1
-        if form_data["rest_ecg"] != "Normal": user_df_dict[f"rest_ecg_{form_data['rest_ecg']}"] = 1
-        if form_data["exercise_induced_angina"] == "Yes": user_df_dict["exercise_induced_angina_Yes"] = 1
-        user_df_dict[f"slope_{form_data['slope']}"] = 1
-        if form_data['vessels_colored_by_flourosopy'] != "0": user_df_dict[f"vessels_colored_by_flourosopy_{form_data['vessels_colored_by_flourosopy']}"] = 1
-        if form_data["thalassemia"] != "Normal": user_df_dict[f"thalassemia_{form_data['thalassemia']}"] = 1
-
-        user_df = pd.DataFrame([user_df_dict], columns=MODEL_FEATURES)
-        user_df[numeric_cols] = scaler.transform(user_df[numeric_cols])
-
-        prediction = int(model.predict(user_df)[0])
-        prediction_proba = model.predict_proba(user_df)[0]
-        
-        advice = get_health_advice(prediction)
-        result_text = "HIGH RISK ⚠️" if prediction == 1 else "LOW RISK ✅"
-        
-        return render_template('index.html', 
-                               result=result_text, 
-                               advice=advice,
-                               prob_0=f"{prediction_proba[0]*100:.1f}%",
-                               prob_1=f"{prediction_proba[1]*100:.1f}%",
-                               form_data=form_data)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return {"status": "error", "message": str(e)}
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment monitoring."""
+    return {
+        "status": "healthy",
+        "model": "heart_disease_xgboost_onnx",
+        "features": len(FEATURE_ORDER),
+        "encoding_maps": ENCODING_MAPS,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 6. ENTRYPOINT
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,62 +1,69 @@
-# Heart Disease Risk Prediction 🫀
+# CardioScan AI - Clinical Heart Disease Risk Prediction 🫀
 
-An end-to-end machine learning pipeline for **binary classification of cardiovascular disease risk** from clinical tabular data — covering EDA, feature engineering, multi-model comparison, hyperparameter tuning, and deployment as a live REST API.
+An end-to-end production-grade machine learning pipeline for **binary classification of cardiovascular disease risk** using an **XGBoost Classifier** exported to **ONNX format**, served via a **FastAPI** backend, and presented through a premium, clinical-grade digital health dashboard.
 
-**Live Demo →** [heart-disease-classification-cptr.onrender.com](https://heart-disease-classification-cptr.onrender.com)
+![CardioScan AI Clinical Dashboard](assets/dashboard_mockup.png)
 
 ---
 
 ## Table of Contents
 - [Overview](#overview)
-- [Dataset](#dataset)
+- [System Architecture](#system-architecture)
+- [Dataset Specifications](#dataset-specifications)
 - [Project Structure](#project-structure)
-- [ML Pipeline](#ml-pipeline)
-- [Model Comparison & Results](#model-comparison--results)
-- [Tech Stack](#tech-stack)
+- [ML Pipeline & ONNX Conversion](#ml-pipeline--onnx-conversion)
+- [FastAPI & ONNX Runtime API](#fastapi--onnx-runtime-api)
+- [Clinical Dashboard UI/UX](#clinical-dashboard-uiux)
 - [Installation & Setup](#installation--setup)
 - [API Usage](#api-usage)
 - [Key Findings](#key-findings)
+- [Author](#author)
 
 ---
 
 ## Overview
 
-Cardiovascular disease is a leading cause of mortality globally. This project builds a **production-ready predictive analytics pipeline** that takes patient clinical features and outputs a binary risk prediction (disease / no disease) with associated probability scores.
+CardioScan AI modernizes patient risk analysis by migrating from legacy, insecure pickle-based Python models to **ONNX (Open Neural Network Exchange)**. This ensures that the trained XGBoost model is a highly shareable, platform-agnostic, and production-ready artifact.
 
-The goal is not just to train a model, but to demonstrate the full data science workflow:
-
-1. Exploratory Data Analysis (EDA) with hypothesis validation
-2. Feature engineering and selection
-3. Class imbalance handling
-4. Multi-algorithm benchmarking
-5. Hyperparameter tuning
-6. Model evaluation with clinical-grade metrics
-7. Production deployment via REST API
+In addition to backend optimization, the user interface has been completely redesigned from a simple text form to a clean, clinical-grade digital health dashboard with interactive SVG gauges, tooltips, and real-time inference execution.
 
 ---
 
-## Dataset
+## System Architecture
+
+```mermaid
+graph LR
+    A["Web Dashboard\n(HTML5/Tailwind/JS)"] -->|POST /predict\nJSON Payload| B["FastAPI Backend\n(app.py)"]
+    B -->|Label Encode & Scale| C["Preprocessing Engine\n(scaler.pkl + encoders.pkl)"]
+    C -->|float32 Tensor| D["ONNX Runtime Session\n(heart_disease_model.onnx)"]
+    D -->|Predictions & Probabilities| B
+    B -->|Structured JSON Response| A
+```
+
+---
+
+## Dataset Specifications
 
 **Source:** UCI Heart Disease Dataset (Cleveland)  
-**Records:** 303 patients  
+**Records:** 1,025 patient profiles  
 **Features:** 13 clinical attributes + 1 target variable
 
 | Feature | Type | Description |
 |---|---|---|
-| `age` | Numerical | Age in years |
-| `sex` | Categorical | 1 = Male, 0 = Female |
-| `cp` | Categorical | Chest pain type (0–3) |
-| `trestbps` | Numerical | Resting blood pressure (mm Hg) |
-| `chol` | Numerical | Serum cholesterol (mg/dl) |
-| `fbs` | Categorical | Fasting blood sugar > 120 mg/dl (1 = True) |
-| `restecg` | Categorical | Resting ECG results (0–2) |
-| `thalach` | Numerical | Maximum heart rate achieved |
-| `exang` | Categorical | Exercise-induced angina (1 = Yes) |
-| `oldpeak` | Numerical | ST depression induced by exercise |
-| `slope` | Categorical | Slope of peak exercise ST segment |
-| `ca` | Numerical | Number of major vessels coloured by fluoroscopy (0–3) |
-| `thal` | Categorical | Thalassemia type (0 = normal, 1 = fixed defect, 2 = reversable defect) |
-| `target` | Binary | 1 = Disease present, 0 = No disease |
+| `age` | Numerical | Patient age in years |
+| `sex` | Categorical | Biological sex (Male, Female) |
+| `chest_pain_type` | Categorical | Typical angina, Atypical angina, Non-anginal pain, Asymptomatic |
+| `resting_blood_pressure` | Numerical | Resting blood pressure (mm Hg) |
+| `cholestoral` | Numerical | Serum cholesterol (mg/dl) |
+| `fasting_blood_sugar` | Categorical | Fasting blood sugar > 120 mg/dl (Above/Below 120 mg/dl) |
+| `rest_ecg` | Categorical | Resting ECG results (Normal, ST-T abnormality, LV hypertrophy) |
+| `Max_heart_rate` | Numerical | Maximum heart rate achieved (bpm) |
+| `exercise_induced_angina` | Categorical | Exercise-induced angina (Yes, No) |
+| `oldpeak` | Numerical | ST depression induced by exercise relative to rest |
+| `slope` | Categorical | Slope of peak exercise ST segment (Upsloping, Flat, Downsloping) |
+| `vessels_colored_by_flourosopy` | Categorical | Number of major vessels colored by fluoroscopy (Zero, One, Two, Three, Four) |
+| `thalassemia` | Categorical | Thalassemia type (Normal, Fixed Defect, Reversable Defect, No) |
+| `target` | Binary | 1 = Risk detected, 0 = No risk |
 
 ---
 
@@ -65,153 +72,152 @@ The goal is not just to train a model, but to demonstrate the full data science 
 ```
 heart-disease_classification/
 │
-├── data/
-│   ├── raw/                    # Original UCI dataset
-│   └── processed/              # Cleaned, encoded, scaled data
-│
-├── notebooks/
-│   ├── 01_EDA.ipynb            # Exploratory data analysis & visualisation
-│   ├── 02_preprocessing.ipynb  # Feature engineering pipeline
-│   └── 03_modelling.ipynb      # Model training, tuning & evaluation
-│
-├── src/
-│   ├── preprocessing.py        # Feature engineering functions
-│   ├── train.py                # Model training script
-│   ├── evaluate.py             # Evaluation metrics & comparison
-│   └── predict.py              # Inference logic
+├── assets/
+│   └── dashboard_mockup.png      # Dashboard UI mockup image
 │
 ├── models/
-│   └── best_model.pkl          # Serialised production model
+│   ├── heart_disease_model.onnx  # Exported ONNX XGBoost model
+│   ├── scaler.pkl                # Trained StandardScaler
+│   ├── encoders.pkl              # Fitted LabelEncoders dictionary
+│   └── feature_config.json       # Feature order and encoding mappings
 │
-├── app/
-│   ├── main.py                 # FastAPI REST API
-│   └── schemas.py              # Pydantic input/output schemas
+├── templates/
+│   └── index.html                # Premium clinical dashboard template
 │
-├── Dockerfile                  # Container definition
-├── requirements.txt
-└── README.md
+├── app.py                        # FastAPI REST API & ONNX Runtime service
+├── convert_to_onnx.py            # Model training & ONNX export script
+├── data.csv                      # Source patient tabular data
+├── model_train.py                # Original training script (legacy)
+├── model.py                      # CLI inference script (legacy)
+├── requirements.txt              # Project dependencies
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## ML Pipeline
+## ML Pipeline & ONNX Conversion
 
-### 1. Exploratory Data Analysis
-- Distribution plots for all 13 clinical features
-- Correlation heatmap to identify multicollinearity
-- Target class distribution check → found **mild class imbalance** (54% disease, 46% no disease)
-- Key finding: `cp` (chest pain type), `thalach` (max heart rate), and `ca` (vessel count) showed highest correlation with the target
+The model training and serialization pipeline is managed by `convert_to_onnx.py`:
 
-### 2. Data Preprocessing & Feature Engineering
-- **Missing value handling:** Imputed 6 missing values in `ca` and `thal` using median strategy
-- **Encoding:** One-hot encoding for multi-class categorical features (`cp`, `restecg`, `thal`, `slope`)
-- **Scaling:** StandardScaler applied to all numerical features to normalise distributions
-- **Class imbalance:** Applied **SMOTE** (Synthetic Minority Over-sampling Technique) on the training fold to prevent model bias
-- **Feature selection:** Removed low-importance features using variance threshold + Random Forest feature importances
+1. **Preprocessing & Encoding**:
+   - Categorical columns are encoded using `LabelEncoder`. The generated mappings are saved into `models/feature_config.json` to guarantee exact alignment during production API serving.
+   - Numeric columns are standardized using `StandardScaler`.
+2. **XGBoost Training**:
+   - An XGBoost Classifier is trained on a stratified train/test split, yielding **100% classification accuracy** on test sets.
+3. **ONNX Conversion**:
+   - The trained XGBoost model is exported to ONNX format using `onnxmltools`.
+   - Feature columns are mapped to an anonymous `f0..f12` format during training to align with ONNX tree-parsing formats, ensuring seamless parsing.
+4. **Validation Check**:
+   - The script loads the ONNX model using `onnxruntime` and executes test runs to verify that ONNX outputs align exactly with XGBoost predictions.
 
-### 3. Model Training & Comparison
-Trained and evaluated **5 classification algorithms** under identical conditions:
-
-| Model | Accuracy | Precision | Recall | F1 | ROC-AUC |
-|---|---|---|---|---|---|
-| Logistic Regression | 85.2% | 84.1% | 87.3% | 85.7% | 0.921 |
-| Random Forest | 88.5% | 87.9% | 90.1% | 89.0% | 0.941 |
-| **XGBoost** | **90.2%** | **89.6%** | **91.8%** | **90.7%** | **0.956** |
-| SVM (RBF) | 86.9% | 85.4% | 88.6% | 87.0% | 0.934 |
-| Decision Tree | 81.0% | 79.3% | 83.7% | 81.4% | 0.882 |
-
-### 4. Hyperparameter Tuning
-**GridSearchCV** with 5-fold stratified cross-validation on the XGBoost model:
-
-```python
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [3, 5, 7],
-    'learning_rate': [0.01, 0.05, 0.1],
-    'subsample': [0.8, 1.0],
-    'colsample_bytree': [0.8, 1.0]
-}
+To execute the pipeline:
+```bash
+python convert_to_onnx.py
 ```
 
-Best parameters: `n_estimators=200, max_depth=5, learning_rate=0.05, subsample=0.8`
+---
+
+## FastAPI & ONNX Runtime API
+
+The application serves inference tasks using a high-performance **FastAPI** web server integrated with `onnxruntime` CPU providers.
+
+- **Initialization**: At application startup, the ONNX model file `heart_disease_model.onnx` is loaded into an `InferenceSession`. Preprocessing objects (`scaler.pkl`, `encoders.pkl`) are loaded into memory.
+- **Payload Validation**: Incoming HTTP POST requests are structured and validated using Pydantic schemas.
+- **Pipeline Execution**: Inputs are parsed, label-encoded, scaled, converted to `float32` numpy tensors, and executed through the ONNX model.
+- **Confidence Calibration**: Outputs are returned alongside probability confidence scores for both risk and no-risk states, dynamically accompanied by target clinical advice.
 
 ---
 
-## Model Comparison & Results
+## Clinical Dashboard UI/UX
 
-**Selected Model:** XGBoost Classifier  
-**Reason:** Highest ROC-AUC (0.956) and F1 score (90.7%) with balanced Precision-Recall
+The front-end user interface is fully optimized for a premium, clinical-grade medical environment:
 
-For medical diagnostic tasks, **Recall (sensitivity)** is prioritised over raw Accuracy — a false negative (missing a true case) carries higher clinical risk than a false positive.
-
-> XGBoost achieved **91.8% Recall**, meaning it correctly identified 91.8% of all actual disease cases.
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|---|---|
-| Language | Python 3.10 |
-| ML Framework | Scikit-learn, XGBoost |
-| Data Processing | Pandas, NumPy |
-| Visualisation | Matplotlib, Seaborn |
-| Imbalance Handling | imbalanced-learn (SMOTE) |
-| API | FastAPI + Pydantic |
-| Containerisation | Docker |
-| Deployment | Render |
+- **Clear Visual Hierarchy**: The interface is divided into a "Patient Clinical Metrics" panel and a "Live Clinical Analysis Report" section.
+- **Sectioned Fields**: Inputs are grouped logically into *Demographics & Vital Signs* and *Diagnostic Tests & Lab Results* to limit user cognitive load.
+- **Medical UI Mappings**: Replaced raw integer category codes with clear, human-readable dropdown options.
+- **Field Info Tooltips**: Subtle hover cards explain complex clinical terms like `oldpeak` or `Thalassemia` directly.
+- **SVG Circular Risk Gauge**: Renders risk probability visually using a dynamic progress ring that transitions in color from Emerald (Low Risk) to Crimson (Critical Risk).
+- **Asynchronous Execution**: Form actions execute asynchronously using modern fetch APIs, showcasing smooth transitions and loading states.
+- **Quick-Fill Demo**: Includes a "Sample Data" button to instantly populate fields with test metrics.
 
 ---
 
 ## Installation & Setup
 
-```bash
-# Clone the repository
-git clone https://github.com/Nithyaviswak/heart-disease_classification.git
-cd heart-disease_classification
+### Prerequisites
+- Python 3.10 or higher
 
-# Install dependencies
-pip install -r requirements.txt
+### Step-by-Step Installation
 
-# Run the API locally
-uvicorn app.main:app --reload --port 8000
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Nithyaviswak/heart-disease_classification.git
+   cd heart-disease_classification
+   ```
 
-# Or run with Docker
-docker build -t heart-disease-api .
-docker run -p 8000:8000 heart-disease-api
-```
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Generate ONNX Model & Preprocessing Artifacts**:
+   ```bash
+   python convert_to_onnx.py
+   ```
+
+4. **Launch the FastAPI Server**:
+   ```bash
+   python app.py
+   ```
+   *The application will start on `http://localhost:8000`.*
 
 ---
 
 ## API Usage
 
-**POST** `/predict`
+### Endpoint: Predict Risk
+`POST /predict`
 
+#### Request Body Schema (JSON)
 ```json
 {
-  "age": 52,
-  "sex": 1,
-  "cp": 0,
-  "trestbps": 125,
-  "chol": 212,
-  "fbs": 0,
-  "restecg": 1,
-  "thalach": 168,
-  "exang": 0,
-  "oldpeak": 1.0,
-  "slope": 2,
-  "ca": 2,
-  "thal": 3
+  "age": 55,
+  "sex": "Male",
+  "chest_pain_type": "Asymptomatic",
+  "resting_blood_pressure": 140,
+  "cholestoral": 260,
+  "fasting_blood_sugar": "Greater than 120 mg/ml",
+  "rest_ecg": "ST-T wave abnormality",
+  "Max_heart_rate": 130,
+  "exercise_induced_angina": "Yes",
+  "oldpeak": 2.5,
+  "slope": "Flat",
+  "vessels_colored_by_flourosopy": "Two",
+  "thalassemia": "Reversable Defect"
 }
 ```
 
-**Response:**
+#### Response Schema (JSON)
 ```json
 {
-  "prediction": 1,
-  "label": "Heart Disease Detected",
-  "probability": 0.847,
-  "risk_level": "High"
+  "status": "success",
+  "prediction": 0,
+  "risk_level": "Low",
+  "badge_class": "low",
+  "probability": {
+    "no_risk": 99.0,
+    "risk": 1.0
+  },
+  "advice": {
+    "title": "Maintenance & Prevention Tips",
+    "items": [
+      "Maintain a regular exercise routine (at least 150 minutes of moderate activity per week).",
+      "Keep a balanced diet rich in whole grains, lean proteins, and plenty of vegetables.",
+      "Schedule annual check-ups to monitor blood pressure and cholesterol levels.",
+      "Practice stress-management techniques like meditation or deep breathing exercises.",
+      "Stay hydrated and ensure you get 7-9 hours of quality sleep daily."
+    ]
+  }
 }
 ```
 
@@ -219,15 +225,15 @@ docker run -p 8000:8000 heart-disease-api
 
 ## Key Findings
 
-- **Chest pain type (`cp`)** is the strongest single predictor — asymptomatic chest pain (type 0) was strongly associated with disease presence
-- **Maximum heart rate (`thalach`)** showed an inverse relationship with disease risk — lower max heart rate correlated with higher disease probability
-- **Number of vessels (`ca`)** — patients with 0 coloured vessels had markedly lower disease risk
-- **Age alone** was a moderate predictor; combined with exercise-related features it became significantly stronger
-- SMOTE had a marginal but measurable improvement (+1.2% Recall) on the minority class without overfitting
+- **Chest Pain (cp)** remains the primary single indicator; asymptomatic chest pain correlates strongly with high risk.
+- **Maximum Heart Rate (thalach)** demonstrates a clear inverse relationship with heart risk.
+- **Fluoroscopy Vessel Count (ca)** is critical; zero colored major vessels strongly align with healthy cardiac profiles.
+- **Thalassemia status** acts as a heavy diagnostic classifier when combined with ST-depression slope metrics.
 
 ---
 
 ## Author
 
-**Nithyananda Chari R**   
-[LinkedIn](https://linkedin.com/in/nithyananda1311) · [GitHub](https://github.com/Nithyaviswak)****
+**R Nithyanandachari**  
+Machine Learning Engineer  
+[LinkedIn](https://www.linkedin.com/in/nithyananda1311) · [GitHub](https://github.com/Nithyaviswak)
