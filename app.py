@@ -127,7 +127,7 @@ def get_health_advice(prediction: int, probability: float) -> dict:
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Serve the main dashboard page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html")
 
 
 @app.post("/predict")
